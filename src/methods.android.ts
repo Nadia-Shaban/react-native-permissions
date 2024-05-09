@@ -1,34 +1,22 @@
-import {Alert, AlertButton, NativeModules} from 'react-native';
+import {Alert, AlertButton} from 'react-native';
 import type {Contract} from './contract';
+import NativeModule from './NativePermissionsModule';
 import type {NotificationsResponse, Permission, PermissionStatus, Rationale} from './types';
 import {
   checkLocationAccuracy,
   openLimitedPhotoLibraryPicker,
   requestLocationAccuracy,
 } from './unsupportedPlatformMethods';
-import {uniq} from './utils';
+import {platformVersion, uniq} from './utils';
 
-const NativeModule: {
-  checkPermission: (permission: Permission) => Promise<PermissionStatus>;
-  requestPermission: (permission: Permission) => Promise<PermissionStatus>;
-  checkNotifications: () => Promise<NotificationsResponse>;
-  openSettings: () => Promise<true>;
-  shouldShowRequestPermissionRationale: (permission: Permission) => Promise<boolean>;
-
-  checkMultiplePermissions: (
-    permissions: Permission[],
-  ) => Promise<Record<Permission, PermissionStatus>>;
-  requestMultiplePermissions: (
-    permissions: Permission[],
-  ) => Promise<Record<Permission, PermissionStatus>>;
-} = NativeModules.RNPermissions;
+const TIRAMISU_VERSION_CODE = 33;
 
 async function openSettings(): Promise<void> {
   await NativeModule.openSettings();
 }
 
 function check(permission: Permission): Promise<PermissionStatus> {
-  return NativeModule.checkPermission(permission);
+  return NativeModule.checkPermission(permission) as Promise<PermissionStatus>;
 }
 
 async function request(permission: Permission, rationale?: Rationale): Promise<PermissionStatus> {
@@ -42,14 +30,17 @@ async function request(permission: Permission, rationale?: Rationale): Promise<P
         const buttons: AlertButton[] = [];
 
         if (buttonNegative) {
-          const onPress = () => resolve(NativeModule.checkPermission(permission));
+          const onPress = () =>
+            resolve(NativeModule.checkPermission(permission) as Promise<PermissionStatus>);
+
           buttonNeutral && buttons.push({text: buttonNeutral, onPress});
           buttons.push({text: buttonNegative, onPress});
         }
 
         buttons.push({
           text: buttonPositive,
-          onPress: () => resolve(NativeModule.requestPermission(permission)),
+          onPress: () =>
+            resolve(NativeModule.requestPermission(permission) as Promise<PermissionStatus>),
         });
 
         Alert.alert(title, message, buttons, {cancelable: false});
@@ -57,25 +48,43 @@ async function request(permission: Permission, rationale?: Rationale): Promise<P
     }
   }
 
-  return NativeModule.requestPermission(permission);
+  return NativeModule.requestPermission(permission) as Promise<PermissionStatus>;
 }
 
-function checkNotifications(): Promise<NotificationsResponse> {
-  return NativeModule.checkNotifications();
+async function checkNotifications(): Promise<NotificationsResponse> {
+  if (platformVersion < TIRAMISU_VERSION_CODE) {
+    return NativeModule.checkNotifications() as Promise<NotificationsResponse>;
+  }
+
+  const status = await check('android.permission.POST_NOTIFICATIONS');
+  return {status, settings: {}};
+}
+
+async function requestNotifications(): Promise<NotificationsResponse> {
+  if (platformVersion < TIRAMISU_VERSION_CODE) {
+    return NativeModule.checkNotifications() as Promise<NotificationsResponse>;
+  }
+
+  const status = await request('android.permission.POST_NOTIFICATIONS');
+  return {status, settings: {}};
 }
 
 function checkMultiple<P extends Permission[]>(
   permissions: P,
 ): Promise<Record<P[number], PermissionStatus>> {
   const dedup = uniq(permissions);
-  return NativeModule.checkMultiplePermissions(dedup);
+  return NativeModule.checkMultiplePermissions(dedup) as Promise<
+    Record<P[number], PermissionStatus>
+  >;
 }
 
 function requestMultiple<P extends Permission[]>(
   permissions: P,
 ): Promise<Record<P[number], PermissionStatus>> {
   const dedup = uniq(permissions);
-  return NativeModule.requestMultiplePermissions(dedup);
+  return NativeModule.requestMultiplePermissions(dedup) as Promise<
+    Record<P[number], PermissionStatus>
+  >;
 }
 
 export const methods: Contract = {
@@ -88,5 +97,5 @@ export const methods: Contract = {
   request,
   requestLocationAccuracy,
   requestMultiple,
-  requestNotifications: checkNotifications,
+  requestNotifications,
 };

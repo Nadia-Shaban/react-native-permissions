@@ -1,5 +1,4 @@
-#import <React/RCTBridgeModule.h>
-#import <React/RCTConvert.h>
+#import <React/RCTBridge.h>
 
 typedef NS_ENUM(NSInteger, RNPermission) {
   RNPermissionUnknown = 0,
@@ -54,10 +53,10 @@ typedef NS_ENUM(NSInteger, RNPermission) {
 #if __has_include("RNPermissionHandlerPhotoLibraryAddOnly.h")
   RNPermissionPhotoLibraryAddOnly = 17,
 #endif
+#if __has_include("RNPermissionHandlerLocalNetworkPrivacy.h")
+  RNPermissionLocalNetworkPrivacy = 18,
+#endif
 };
-
-@interface RCTConvert (RNPermission)
-@end
 
 typedef enum {
   RNPermissionStatusNotAvailable = 0,
@@ -84,7 +83,8 @@ typedef enum {
 
 @end
 
-@interface RNPermissions : NSObject <RCTBridgeModule>
+
+@interface RNPermissionsHelper : NSObject
 
 + (bool)isFlaggedAsRequested:(NSString * _Nonnull)handlerId;
 

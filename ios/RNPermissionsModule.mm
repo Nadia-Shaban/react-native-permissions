@@ -1,4 +1,4 @@
-#import "RNPermissions.h"
+#import "RNPermissionsModule.h"
 #import <React/RCTLog.h>
 
 #if __has_include("RNPermissionHandlerBluetoothPeripheral.h")
@@ -58,8 +58,9 @@
 #if __has_include("RNPermissionHandlerLocationAccuracy.h")
 #import "RNPermissionHandlerLocationAccuracy.h"
 #endif
-
-static NSString* SETTING_KEY = @"@RNPermissions:Requested";
+#if __has_include("RNPermissionHandlerLocalNetworkPrivacy.h")
+#import "RNPermissionHandlerLocalNetworkPrivacy.h"
+#endif
 
 @implementation RCTConvert(RNPermission)
 
@@ -115,17 +116,20 @@ RCT_ENUM_CONVERTER(RNPermission, (@{
 #if __has_include("RNPermissionHandlerPhotoLibraryAddOnly.h")
   [RNPermissionHandlerPhotoLibraryAddOnly handlerUniqueId]: @(RNPermissionPhotoLibraryAddOnly),
 #endif
+#if __has_include("RNPermissionHandlerLocalNetworkPrivacy.h")
+  [RNPermissionHandlerLocalNetworkPrivacy handlerUniqueId]: @(RNPermissionLocalNetworkPrivacy),
+#endif
 }), RNPermissionUnknown, integerValue);
 
 @end
 
-@interface RNPermissions()
+@interface RNPermissionsModule()
 
 @property (nonatomic, strong) NSMutableDictionary<NSString *, id<RNPermissionHandler>> *_Nonnull handlers;
 
 @end
 
-@implementation RNPermissions
+@implementation RNPermissionsModule
 
 RCT_EXPORT_MODULE();
 
@@ -197,15 +201,17 @@ RCT_EXPORT_MODULE();
 #if __has_include("RNPermissionHandlerLocationAccuracy.h")
   [available addObject:[RNPermissionHandlerLocationAccuracy handlerUniqueId]];
 #endif
+#if __has_include("RNPermissionHandlerLocalNetworkPrivacy.h")
+  [available addObject:[RNPermissionHandlerLocalNetworkPrivacy handlerUniqueId]];
+#endif
 
 #if RCT_DEV
   if ([available count] == 0) {
     NSMutableString *message = [NSMutableString new];
 
     [message appendString:@"⚠  No permission handler detected.\n\n"];
-    [message appendString:@"• Check that you link at least one permission handler in your Podfile.\n"];
-    [message appendString:@"• Uninstall this app, delete your Xcode DerivedData folder and rebuild it.\n"];
-    [message appendString:@"• If you use `use_frameworks!`, follow the workaround guide in the project README."];
+    [message appendString:@"• Check that you added at least one permission handler in your package.json reactNativePermissionsIOS config.\n"];
+    [message appendString:@"• Uninstall this app, reinstall your Pods, delete your Xcode DerivedData folder and rebuild it.\n"];
 
     RCTLogError(@"%@", message);
   }
@@ -314,6 +320,11 @@ RCT_EXPORT_MODULE();
       handler = [RNPermissionHandlerPhotoLibraryAddOnly new];
       break;
 #endif
+#if __has_include("RNPermissionHandlerLocalNetworkPrivacy.h")
+    case RNPermissionLocalNetworkPrivacy:
+      handler = [RNPermissionHandlerLocalNetworkPrivacy new];
+      break;
+#endif
     case RNPermissionUnknown:
       break; // RCTConvert prevents this case
   }
@@ -355,29 +366,8 @@ RCT_EXPORT_MODULE();
   }
 }
 
-+ (bool)isFlaggedAsRequested:(NSString * _Nonnull)handlerId {
-  NSArray<NSString *> *requested = [[NSUserDefaults standardUserDefaults] arrayForKey:SETTING_KEY];
-  return requested == nil ? false : [requested containsObject:handlerId];
-}
-
-+ (void)flagAsRequested:(NSString * _Nonnull)handlerId {
-  NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
-  NSMutableArray *requested = [[userDefaults arrayForKey:SETTING_KEY] mutableCopy];
-
-  if (requested == nil) {
-    requested = [NSMutableArray new];
-  }
-
-  if (![requested containsObject:handlerId]) {
-    [requested addObject:handlerId];
-    [userDefaults setObject:requested forKey:SETTING_KEY];
-    [userDefaults synchronize];
-  }
-}
-
-RCT_REMAP_METHOD(openSettings,
-                 openSettingsWithResolver:(RCTPromiseResolveBlock)resolve
-                 rejecter:(RCTPromiseRejectBlock)reject) {
+RCT_EXPORT_METHOD(openSettings:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
   UIApplication *sharedApplication = [UIApplication sharedApplication];
   NSURL *url = [NSURL URLWithString:UIApplicationOpenSettingsURLString];
 
@@ -390,11 +380,20 @@ RCT_REMAP_METHOD(openSettings,
   }];
 }
 
-RCT_REMAP_METHOD(check,
-                 checkWithPermission:(RNPermission)permission
-                 resolver:(RCTPromiseResolveBlock)resolve
-                 rejecter:(RCTPromiseRejectBlock)reject) {
+RCT_EXPORT_METHOD(check:
+#ifdef RCT_NEW_ARCH_ENABLED
+                  (NSString *)permission
+#else
+                  (RNPermission)permission
+#endif
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+#ifdef RCT_NEW_ARCH_ENABLED
+  id<RNPermissionHandler> handler = [self handlerForPermission:[RCTConvert RNPermission:permission]];
+#else
   id<RNPermissionHandler> handler = [self handlerForPermission:permission];
+#endif
+
   NSString *lockId = [self lockHandler:handler];
 
   [handler checkWithResolver:^(RNPermissionStatus status) {
@@ -406,11 +405,20 @@ RCT_REMAP_METHOD(check,
   }];
 }
 
-RCT_REMAP_METHOD(request,
-                 requestWithPermission:(RNPermission)permission
-                 resolver:(RCTPromiseResolveBlock)resolve
-                 rejecter:(RCTPromiseRejectBlock)reject) {
+RCT_EXPORT_METHOD(request:
+#ifdef RCT_NEW_ARCH_ENABLED
+                  (NSString *)permission
+#else
+                  (RNPermission)permission
+#endif
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+#ifdef RCT_NEW_ARCH_ENABLED
+  id<RNPermissionHandler> handler = [self handlerForPermission:[RCTConvert RNPermission:permission]];
+#else
   id<RNPermissionHandler> handler = [self handlerForPermission:permission];
+#endif
+
   NSString *lockId = [self lockHandler:handler];
 
   [handler requestWithResolver:^(RNPermissionStatus status) {
@@ -422,9 +430,8 @@ RCT_REMAP_METHOD(request,
   }];
 }
 
-RCT_REMAP_METHOD(checkNotifications,
-                 checkNotificationsWithResolver:(RCTPromiseResolveBlock)resolve
-                 rejecter:(RCTPromiseRejectBlock)reject) {
+RCT_EXPORT_METHOD(checkNotifications:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
 #if __has_include("RNPermissionHandlerNotifications.h")
   RNPermissionHandlerNotifications *handler = [RNPermissionHandlerNotifications new];
   NSString *lockId = [self lockHandler:(id<RNPermissionHandler>)handler];
@@ -441,10 +448,9 @@ RCT_REMAP_METHOD(checkNotifications,
 #endif
 }
 
-RCT_REMAP_METHOD(requestNotifications,
-                 requestNotificationsWithOptions:(NSArray<NSString *> * _Nonnull)options
-                 resolver:(RCTPromiseResolveBlock)resolve
-                 rejecter:(RCTPromiseRejectBlock)reject) {
+RCT_EXPORT_METHOD(requestNotifications:(NSArray<NSString *> * _Nonnull)options
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
 #if __has_include("RNPermissionHandlerNotifications.h")
   RNPermissionHandlerNotifications *handler = [RNPermissionHandlerNotifications new];
   NSString *lockId = [self lockHandler:(id<RNPermissionHandler>)handler];
@@ -461,9 +467,8 @@ RCT_REMAP_METHOD(requestNotifications,
 #endif
 }
 
-RCT_REMAP_METHOD(openLimitedPhotoLibraryPicker,
-                 openLimitedPhotoLibraryPickerWithResolver:(RCTPromiseResolveBlock)resolve
-                 rejecter:(RCTPromiseRejectBlock)reject) {
+RCT_EXPORT_METHOD(openLimitedPhotoLibraryPicker:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
 #if __has_include("RNPermissionHandlerPhotoLibrary.h")
   RNPermissionHandlerPhotoLibrary *handler = [RNPermissionHandlerPhotoLibrary new];
   [handler openLimitedPhotoLibraryPickerWithResolver:resolve rejecter:reject];
@@ -472,9 +477,8 @@ RCT_REMAP_METHOD(openLimitedPhotoLibraryPicker,
 #endif
 }
 
-RCT_REMAP_METHOD(checkLocationAccuracy,
-                 checkLocationAccuracyWithResolver:(RCTPromiseResolveBlock)resolve
-                 rejecter:(RCTPromiseRejectBlock)reject) {
+RCT_EXPORT_METHOD(checkLocationAccuracy:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
 #if __has_include("RNPermissionHandlerLocationAccuracy.h")
   [self checkUsageDescriptionKeys:[RNPermissionHandlerLocationAccuracy usageDescriptionKeys]];
 
@@ -485,10 +489,9 @@ RCT_REMAP_METHOD(checkLocationAccuracy,
 #endif
 }
 
-RCT_REMAP_METHOD(requestLocationAccuracy,
-                 requestLocationAccuracyWithPurposeKey:(NSString * _Nonnull)purposeKey
-                 resolver:(RCTPromiseResolveBlock)resolve
-                 rejecter:(RCTPromiseRejectBlock)reject) {
+RCT_EXPORT_METHOD(requestLocationAccuracy:(NSString * _Nonnull)purposeKey
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
 #if __has_include("RNPermissionHandlerLocationAccuracy.h")
   [self checkUsageDescriptionKeys:[RNPermissionHandlerLocationAccuracy usageDescriptionKeys]];
 
@@ -498,5 +501,48 @@ RCT_REMAP_METHOD(requestLocationAccuracy,
   reject(@"location_accuracy_pod_missing", @"LocationAccuracy permission pod is missing", nil);
 #endif
 }
+
+- (void)checkMultiplePermissions:(NSArray *)permissions
+                         resolve:(RCTPromiseResolveBlock)resolve
+                          reject:(RCTPromiseRejectBlock)reject {
+  reject(@"RNPermissions:checkMultiplePermissions", @"checkMultiplePermissions is not supported on iOS", nil);
+}
+
+- (void)checkPermission:(NSString *)permission
+                resolve:(RCTPromiseResolveBlock)resolve
+                 reject:(RCTPromiseRejectBlock)reject {
+  reject(@"RNPermissions:checkPermission", @"checkPermission is not supported on iOS", nil);
+}
+
+- (void)requestMultiplePermissions:(NSArray *)permissions
+                           resolve:(RCTPromiseResolveBlock)resolve
+                            reject:(RCTPromiseRejectBlock)reject {
+  reject(@"RNPermissions:requestMultiplePermissions", @"requestMultiplePermissions is not supported on iOS", nil);
+}
+
+- (void)requestPermission:(NSString *)permission
+                  resolve:(RCTPromiseResolveBlock)resolve
+                   reject:(RCTPromiseRejectBlock)reject {
+  reject(@"RNPermissions:requestPermission", @"requestPermission is not supported on iOS", nil);
+}
+
+- (void)shouldShowRequestPermissionRationale:(NSString *)permission
+                                     resolve:(RCTPromiseResolveBlock)resolve
+                                      reject:(RCTPromiseRejectBlock)reject {
+  reject(@"RNPermissions:shouldShowRequestPermissionRationale", @"shouldShowRequestPermissionRationale is not supported on iOS", nil);
+}
+
+#if RCT_NEW_ARCH_ENABLED
+
+- (facebook::react::ModuleConstants<JS::NativePermissionsModule::Constants::Builder>)getConstants {
+  return [self constantsToExport];
+}
+
+- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
+    (const facebook::react::ObjCTurboModule::InitParams &)params {
+  return std::make_shared<facebook::react::NativePermissionsModuleSpecJSI>(params);
+}
+
+#endif
 
 @end

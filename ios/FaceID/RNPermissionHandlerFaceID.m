@@ -41,7 +41,7 @@
         return resolve(RNPermissionStatusNotAvailable);
     }
 
-    if (![RNPermissions isFlaggedAsRequested:[[self class] handlerUniqueId]]) {
+    if (![RNPermissionsHelper isFlaggedAsRequested:[[self class] handlerUniqueId]]) {
       return resolve(RNPermissionStatusNotDetermined);
     }
 
@@ -76,7 +76,7 @@
     _laContext = context;
 
     [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(UIApplicationDidBecomeActiveNotification:)
+                                             selector:@selector(onApplicationDidBecomeActive:)
                                                  name:UIApplicationDidBecomeActiveNotification
                                                object:nil];
 
@@ -95,12 +95,12 @@
   [_laContext invalidate];
 }
 
-- (void)UIApplicationDidBecomeActiveNotification:(__unused NSNotification *)notification {
+- (void)onApplicationDidBecomeActive:(__unused NSNotification *)notification {
   [[NSNotificationCenter defaultCenter] removeObserver:self
                                                   name:UIApplicationDidBecomeActiveNotification
                                                 object:nil];
 
-  [RNPermissions flagAsRequested:[[self class] handlerUniqueId]];
+  [RNPermissionsHelper flagAsRequested:[[self class] handlerUniqueId]];
   [self checkWithResolver:_resolve rejecter:_reject];
 }
 

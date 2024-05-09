@@ -1,20 +1,31 @@
-# ☝🏼 React Native Permissions
+# ☝🏼 react-native-permissions
 
-[![npm version](https://badge.fury.io/js/react-native-permissions.svg)](https://badge.fury.io/js/react-native-permissions)
-[![npm](https://img.shields.io/npm/dt/react-native-permissions.svg)](https://www.npmjs.org/package/react-native-permissions)
-![Platform - Android, iOS and Windows](https://img.shields.io/badge/platform-Android%20%7C%20iOS%20%7C%20Windows-yellow.svg)
-![MIT](https://img.shields.io/dub/l/vibe-d.svg)
-[![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
+An unified permissions API for React Native on iOS, Android and Windows.<br>
+(For Windows only builds 18362 and later are supported)
 
-A unified permissions API for React Native on iOS, Android and Windows.
+[![mit licence](https://img.shields.io/dub/l/vibe-d.svg?style=for-the-badge)](https://github.com/zoontek/react-native-permissions/blob/main/LICENSE)
+[![npm version](https://img.shields.io/npm/v/react-native-permissions?style=for-the-badge)](https://www.npmjs.org/package/react-native-permissions)
+[![npm downloads](https://img.shields.io/npm/dt/react-native-permissions.svg?label=downloads&style=for-the-badge)](https://www.npmjs.org/package/react-native-permissions)
+<br />
+[![platform - android](https://img.shields.io/badge/platform-Android-3ddc84.svg?logo=android&style=for-the-badge)](https://www.android.com)
+[![platform - ios](https://img.shields.io/badge/platform-iOS-000.svg?logo=apple&style=for-the-badge)](https://developer.apple.com/ios)
+[![platform - windows](https://img.shields.io/badge/platform-Windows-0067b8.svg?logo=windows&style=for-the-badge)](https://www.microsoft.com/en-us/windows)
 
-For Windows only builds 18362 and later are supported.
+## Funding
+
+<a href="https://github.com/sponsors/zoontek">
+  <img align="right" width="150" alt="This library helped you? Consider sponsoring!" src=".github/funding-octocat.svg">
+</a>
+
+This module is provided **as is**, I work on it in my free time.
+
+If your company uses it in a production app, consider sponsoring this project 💰. You also can contact me for **premium** enterprise support, help with issues, prioritize bugfixes, feature requests, etc.
 
 ## Support
 
-| version | react-native version |
-| ------- | -------------------- |
-| 3.0.0+  | 0.63.0+              |
+| version | react-native version | Xcode version |
+| ------- | -------------------- | ------------- |
+| 3.0.0+  | 0.63.0+              | 12+           |
 
 ## Setup
 
@@ -26,39 +37,42 @@ $ yarn add react-native-permissions
 
 ### iOS
 
-By default no permission handler is installed. Update your `Podfile` by choosing the ones you want to check or request, then run `pod install`.
+By default no permission handler is linked. To add one, update your `package.json` by adding the permissions used in your app, then run `npx react-native setup-ios-permissions` followed by `pod install` (`reactNativePermissionsIOS.json` is also supported).
 
-```ruby
-target 'YourAwesomeProject' do
+_📌  Note that these commands must be re-executed each time you update this config, delete the `node_modules` directory or update this library. An useful trick to cover a lot of these cases is running them on `postinstall` and just run `yarn` or `npm install` manually when needed._
 
-  # …
-
-  permissions_path = '../node_modules/react-native-permissions/ios'
-
-  pod 'Permission-AppTrackingTransparency', :path => "#{permissions_path}/AppTrackingTransparency"
-  pod 'Permission-BluetoothPeripheral', :path => "#{permissions_path}/BluetoothPeripheral"
-  pod 'Permission-Calendars', :path => "#{permissions_path}/Calendars"
-  pod 'Permission-Camera', :path => "#{permissions_path}/Camera"
-  pod 'Permission-Contacts', :path => "#{permissions_path}/Contacts"
-  pod 'Permission-FaceID', :path => "#{permissions_path}/FaceID"
-  pod 'Permission-LocationAccuracy', :path => "#{permissions_path}/LocationAccuracy"
-  pod 'Permission-LocationAlways', :path => "#{permissions_path}/LocationAlways"
-  pod 'Permission-LocationWhenInUse', :path => "#{permissions_path}/LocationWhenInUse"
-  pod 'Permission-MediaLibrary', :path => "#{permissions_path}/MediaLibrary"
-  pod 'Permission-Microphone', :path => "#{permissions_path}/Microphone"
-  pod 'Permission-Motion', :path => "#{permissions_path}/Motion"
-  pod 'Permission-Notifications', :path => "#{permissions_path}/Notifications"
-  pod 'Permission-PhotoLibrary', :path => "#{permissions_path}/PhotoLibrary"
-  pod 'Permission-PhotoLibraryAddOnly', :path => "#{permissions_path}/PhotoLibraryAddOnly"
-  pod 'Permission-Reminders', :path => "#{permissions_path}/Reminders"
-  pod 'Permission-Siri', :path => "#{permissions_path}/Siri"
-  pod 'Permission-SpeechRecognition', :path => "#{permissions_path}/SpeechRecognition"
-  pod 'Permission-StoreKit', :path => "#{permissions_path}/StoreKit"
-
-end
+```json
+{
+  "reactNativePermissionsIOS": [
+    "AppTrackingTransparency",
+    "BluetoothPeripheral",
+    "Calendars",
+    "Camera",
+    "Contacts",
+    "FaceID",
+    "LocalNetworkPrivacy",
+    "LocationAccuracy",
+    "LocationAlways",
+    "LocationWhenInUse",
+    "MediaLibrary",
+    "Microphone",
+    "Motion",
+    "Notifications",
+    "PhotoLibrary",
+    "PhotoLibraryAddOnly",
+    "Reminders",
+    "Siri",
+    "SpeechRecognition",
+    "StoreKit"
+  ],
+  "devDependencies": {
+    "pod-install": "0.1.38"
+  },
+  "scripts": {
+    "postinstall": "react-native setup-ios-permissions && pod-install"
+  }
+}
 ```
-
-> :warning: If you see a **No permission handler detected** error: Make sure that you have at least one permission handler set up. In some cases the Xcode cache needs to be cleared (`Xcode -> Product -> Clean Build Folder`)
 
 Then update your `Info.plist` with wanted permissions usage descriptions:
 
@@ -83,6 +97,8 @@ Then update your `Info.plist` with wanted permissions usage descriptions:
   <key>NSContactsUsageDescription</key>
   <string>YOUR TEXT</string>
   <key>NSFaceIDUsageDescription</key>
+  <string>YOUR TEXT</string>
+  <key>NSLocalNetworkUsageDescription</key>
   <string>YOUR TEXT</string>
   <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
   <string>YOUR TEXT</string>
@@ -112,33 +128,17 @@ Then update your `Info.plist` with wanted permissions usage descriptions:
   <key>NSUserTrackingUsageDescription</key>
   <string>YOUR TEXT</string>
 
+  <!-- 🚨 This is required when requesting PERMISSIONS.IOS.LOCAL_NETWORK_PRIVACY 🚨 -->
+
+  <key>NSBonjourServices</key>
+  <array>
+    <string>_lnp._tcp.</string>
+  </array>
+
   <!-- … -->
 
 </dict>
 </plist>
-```
-
-#### Workaround for `use_frameworks!` issues
-
-If you use `use_frameworks!`, add this at the top of your `Podfile`, and uncomment the line corresponding to your CocoaPods version:
-
-```ruby
-use_frameworks!
-
-# Convert all permission pods into static libraries
-pre_install do |installer|
-  Pod::Installer::Xcode::TargetValidator.send(:define_method, :verify_no_static_framework_transitive_dependencies) {}
-
-  installer.pod_targets.each do |pod|
-    if pod.name.eql?('RNPermissions') || pod.name.start_with?('Permission-')
-      def pod.build_type;
-        # Uncomment the line corresponding to your CocoaPods version
-        # Pod::BuildType.static_library # >= 1.9
-        # Pod::Target::BuildType.static_library # < 1.9
-      end
-    end
-  end
-end
 ```
 
 ### Android
@@ -146,8 +146,7 @@ end
 Add all wanted permissions to your app `android/app/src/main/AndroidManifest.xml` file:
 
 ```xml
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-  package="com.myawesomeapp">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
   <!-- 🚨 Keep only the permissions used in your app 🚨 -->
 
@@ -155,17 +154,28 @@ Add all wanted permissions to your app `android/app/src/main/AndroidManifest.xml
   <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
   <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
   <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+  <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
   <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+  <uses-permission android:name="com.android.voicemail.permission.ADD_VOICEMAIL" />
   <uses-permission android:name="android.permission.ANSWER_PHONE_CALLS" />
+  <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
+  <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+  <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
   <uses-permission android:name="android.permission.BODY_SENSORS" />
+  <uses-permission android:name="android.permission.BODY_SENSORS_BACKGROUND" />
   <uses-permission android:name="android.permission.CALL_PHONE" />
   <uses-permission android:name="android.permission.CAMERA" />
   <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+  <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES" />
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
   <uses-permission android:name="android.permission.PROCESS_OUTGOING_CALLS" />
   <uses-permission android:name="android.permission.READ_CALENDAR" />
   <uses-permission android:name="android.permission.READ_CALL_LOG" />
   <uses-permission android:name="android.permission.READ_CONTACTS" />
   <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+  <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+  <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+  <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
   <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
   <uses-permission android:name="android.permission.READ_PHONE_STATE" />
   <uses-permission android:name="android.permission.READ_SMS" />
@@ -175,11 +185,11 @@ Add all wanted permissions to your app `android/app/src/main/AndroidManifest.xml
   <uses-permission android:name="android.permission.RECORD_AUDIO" />
   <uses-permission android:name="android.permission.SEND_SMS" />
   <uses-permission android:name="android.permission.USE_SIP" />
+  <uses-permission android:name="android.permission.UWB_RANGING" />
   <uses-permission android:name="android.permission.WRITE_CALENDAR" />
   <uses-permission android:name="android.permission.WRITE_CALL_LOG" />
   <uses-permission android:name="android.permission.WRITE_CONTACTS" />
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-  <uses-permission android:name="com.android.voicemail.permission.ADD_VOICEMAIL" />
 
   <!-- … -->
 
@@ -339,32 +349,32 @@ As permissions are not handled in the same way on iOS and Android, this library 
                 ╚═════╝                 │ RESULTS.UNAVAILABLE │
                    │                    └─────────────────────┘
            Is the permission
-             requestable ?
-                   │           ╔════╗
-                   ├───────────║ NO ║──────────────┐
-                   │           ╚════╝              │
-                ╔═════╗                            ▼
-                ║ YES ║                  ┌───────────────────┐
-                ╚═════╝                  │ RESULTS.BLOCKED / │
-                   │                     │  RESULTS.GRANTED  │
-                   ▼                     └───────────────────┘
+           already granted ?
+                   │           ╔═════╗
+                   ├───────────║ YES ║─────────────┐
+                   │           ╚═════╝             │
+                ╔════╗                             ▼
+                ║ NO ║                   ┌───────────────────┐
+                ╚════╝                   │  RESULTS.GRANTED  │
+                   │                     └───────────────────┘
+                   ▼
           ┌────────────────┐
           │ RESULTS.DENIED │◀──────────────────────┐
           └────────────────┘                       │
                    │                               │
                    ▼                               │
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓         ╔════╗
-┃ request(PERMISSIONS.ANDROID.CAMERA) ┃         ║ NO ║
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛         ╚════╝
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓         ╔═════╗
+┃ request(PERMISSIONS.ANDROID.CAMERA) ┃         ║ YES ║
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛         ╚═════╝
                    │                               │
          Does the user accept                      │
             the request ?                          │
-                   │           ╔════╗     Does the user check
-                   ├───────────║ NO ║─────"Never ask again" ?
+                   │           ╔════╗      Is the permission
+                   ├───────────║ NO ║──── still requestable ?
                    │           ╚════╝              │
-                ╔═════╗                         ╔═════╗
-                ║ YES ║                         ║ YES ║
-                ╚═════╝                         ╚═════╝
+                ╔═════╗                         ╔════╗
+                ║ YES ║                         ║ NO ║
+                ╚═════╝                         ╚════╝
                    │                               │
                    ▼                               ▼
           ┌─────────────────┐             ┌─────────────────┐
@@ -436,18 +446,28 @@ PERMISSIONS.ANDROID.ACCEPT_HANDOVER;
 PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION;
 PERMISSIONS.ANDROID.ACCESS_COARSE_LOCATION;
 PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION;
+PERMISSIONS.ANDROID.ACCESS_MEDIA_LOCATION;
 PERMISSIONS.ANDROID.ACTIVITY_RECOGNITION;
 PERMISSIONS.ANDROID.ADD_VOICEMAIL;
 PERMISSIONS.ANDROID.ANSWER_PHONE_CALLS;
+PERMISSIONS.ANDROID.BLUETOOTH_ADVERTISE;
+PERMISSIONS.ANDROID.BLUETOOTH_CONNECT;
+PERMISSIONS.ANDROID.BLUETOOTH_SCAN;
 PERMISSIONS.ANDROID.BODY_SENSORS;
+PERMISSIONS.ANDROID.BODY_SENSORS_BACKGROUND;
 PERMISSIONS.ANDROID.CALL_PHONE;
 PERMISSIONS.ANDROID.CAMERA;
 PERMISSIONS.ANDROID.GET_ACCOUNTS;
+PERMISSIONS.ANDROID.NEARBY_WIFI_DEVICES;
+PERMISSIONS.ANDROID.POST_NOTIFICATIONS;
 PERMISSIONS.ANDROID.PROCESS_OUTGOING_CALLS;
 PERMISSIONS.ANDROID.READ_CALENDAR;
 PERMISSIONS.ANDROID.READ_CALL_LOG;
 PERMISSIONS.ANDROID.READ_CONTACTS;
 PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE;
+PERMISSIONS.ANDROID.READ_MEDIA_AUDIO;
+PERMISSIONS.ANDROID.READ_MEDIA_IMAGES;
+PERMISSIONS.ANDROID.READ_MEDIA_VIDEO;
 PERMISSIONS.ANDROID.READ_PHONE_NUMBERS;
 PERMISSIONS.ANDROID.READ_PHONE_STATE;
 PERMISSIONS.ANDROID.READ_SMS;
@@ -457,6 +477,7 @@ PERMISSIONS.ANDROID.RECEIVE_WAP_PUSH;
 PERMISSIONS.ANDROID.RECORD_AUDIO;
 PERMISSIONS.ANDROID.SEND_SMS;
 PERMISSIONS.ANDROID.USE_SIP;
+PERMISSIONS.ANDROID.UWB_RANGING;
 PERMISSIONS.ANDROID.WRITE_CALENDAR;
 PERMISSIONS.ANDROID.WRITE_CALL_LOG;
 PERMISSIONS.ANDROID.WRITE_CONTACTS;
@@ -477,6 +498,7 @@ PERMISSIONS.IOS.CALENDARS;
 PERMISSIONS.IOS.CAMERA;
 PERMISSIONS.IOS.CONTACTS;
 PERMISSIONS.IOS.FACE_ID;
+PERMISSIONS.IOS.LOCAL_NETWORK_PRIVACY;
 PERMISSIONS.IOS.LOCATION_ALWAYS;
 PERMISSIONS.IOS.LOCATION_WHEN_IN_USE;
 PERMISSIONS.IOS.MEDIA_LIBRARY;
@@ -667,6 +689,8 @@ type PermissionStatus = 'unavailable' | 'denied' | 'limited' | 'granted' | 'bloc
 
 Check one permission status.
 
+_⚠️  Android will never return `blocked` after a `check`, you have to request the permission to get the info._
+
 ```ts
 function check(permission: string): Promise<PermissionStatus>;
 ```
@@ -705,6 +729,8 @@ check(PERMISSIONS.IOS.LOCATION_ALWAYS)
 
 Request one permission.
 
+Note that the `rationale` parameter is only available and used on Android.
+
 ```ts
 type Rationale = {
   title: string;
@@ -741,6 +767,7 @@ type NotificationSettings = {
   carPlay?: boolean;
   criticalAlert?: boolean;
   provisional?: boolean;
+  providesAppSettings?: boolean;
   lockScreen?: boolean;
   notificationCenter?: boolean;
 };
@@ -765,11 +792,19 @@ checkNotifications().then(({status, settings}) => {
 
 Request notifications permission status and get notifications settings values.
 
-You cannot request notifications permissions on Windows. Disabling or enabling notifications can only be done through the App Settings.
+- You have to [target at least SDK 33](https://github.com/zoontek/react-native-permissions/releases/tag/3.5.0) to perform request on Android 13+. The permission is always granted for prior versions.
+- You cannot request notifications permissions on Windows. Disabling / enabling them can only be done through the App Settings.
 
 ```ts
 // only used on iOS
-type NotificationOption = 'alert' | 'badge' | 'sound' | 'criticalAlert' | 'carPlay' | 'provisional';
+type NotificationOption =
+  | 'alert'
+  | 'badge'
+  | 'sound'
+  | 'criticalAlert'
+  | 'carPlay'
+  | 'provisional'
+  | 'providesAppSettings';
 
 type NotificationSettings = {
   // properties only available on iOS
@@ -780,13 +815,12 @@ type NotificationSettings = {
   carPlay?: boolean;
   criticalAlert?: boolean;
   provisional?: boolean;
+  providesAppSettings?: boolean;
   lockScreen?: boolean;
   notificationCenter?: boolean;
 };
 
-function requestNotifications(
-  options: NotificationOption[],
-): Promise<{
+function requestNotifications(options: NotificationOption[]): Promise<{
   status: PermissionStatus;
   settings: NotificationSettings;
 }>;
@@ -805,6 +839,8 @@ requestNotifications(['alert', 'sound']).then(({status, settings}) => {
 #### checkMultiple
 
 Check multiples permissions in parallel.
+
+_⚠️  Android will never return `blocked` after a `check`, you have to request the permission to get the info._
 
 ```ts
 function checkMultiple<P extends Permission[]>(
@@ -918,4 +954,28 @@ import {requestLocationAccuracy} from 'react-native-permissions';
 requestLocationAccuracy({purposeKey: 'YOUR-PURPOSE-KEY'})
   .then((accuracy) => console.log(`Location accuracy is: ${accuracy}`))
   .catch(() => console.warn('Cannot request location accuracy'));
+```
+
+### About iOS `LOCATION_ALWAYS` permission
+
+If you are requesting `PERMISSIONS.IOS.LOCATION_ALWAYS`, there won't be a `Always Allow` button in the system dialog. Only `Allow Once`, `Allow While Using App` and `Don't Allow`. This is expected behaviour, check the [Apple Developer Docs](https://developer.apple.com/documentation/corelocation/cllocationmanager/1620551-requestalwaysauthorization#3578736).
+
+When requesting `PERMISSIONS.IOS.LOCATION_ALWAYS`, if the user choose `Allow While Using App`, a provisional "always" status will be granted. The user will see `While Using` in the settings and later will be informed that your app is using the location in background. That looks like this:
+
+![alt text](https://camo.githubusercontent.com/e8357168f4c8e754adfd940fc065520de838a21a80001839d5e740c18893ec67/68747470733a2f2f636d732e717a2e636f6d2f77702d636f6e74656e742f75706c6f6164732f323031392f30392f696f732d31332d6c6f636174696f6e732d7465736c612d31393230783938322e6a70673f7175616c6974793d37352673747269703d616c6c26773d3132303026683d3930302663726f703d31 'Screenshot')
+
+Subsequently, if you are requesting `LOCATION_ALWAYS` permission, there is no need to request `LOCATION_WHEN_IN_USE`. If the user accepts, `LOCATION_WHEN_IN_USE` will be granted too. If the user denies, `LOCATION_WHEN_IN_USE` will be denied too.
+
+### Testing with Jest
+
+If you don't already have a Jest setup file configured, please add the following to your Jest configuration file and create the new `jest.setup.js` file in project root:
+
+```js
+setupFiles: ['<rootDir>/jest.setup.js'];
+```
+
+You can then add the following line to that setup file to mock the `NativeModule.RNPermissions`:
+
+```js
+jest.mock('react-native-permissions', () => require('react-native-permissions/mock'));
 ```
